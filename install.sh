@@ -6,7 +6,7 @@
 set -euo pipefail
 
 BINARY_NAME="shahadath"
-BINARY_BASE="https://shahadath-turbo-max.onrender.com"
+BINARY_BASE="https://shahadath-serve.onrender.com"
 VERSION_URL="${BINARY_BASE}/latest-version.txt"
 
 RED='\033[0;31m'

@@ -1,6 +1,4 @@
-//go:build ignore
-
-  package main
+package main
 
   import (
       "fmt"
@@ -10,8 +8,8 @@
       "strings"
   )
 
-  const version = "1.0.0"
-  const ghRelease = "https://github.com/Ileana747/Shahadath-Turbo-Max/releases/download/v" + version
+  const appVersion = "1.0.0"
+  const ghRelease = "https://github.com/Ileana747/Shahadath-Turbo-Max/releases/download/v" + appVersion
 
   var binaryMap = map[string]string{
       "linux/amd64":   "shahadath-linux-amd64",
@@ -28,54 +26,72 @@
       "windows/386":   "shahadath-windows-386.exe",
   }
 
+  var rawBase = "https://raw.githubusercontent.com/Ileana747/Shahadath-Turbo-Max/main"
+
   func main() {
       port := os.Getenv("PORT")
-      if port == "" { port = "8080" }
-      
+      if port == "" {
+          port = "8080"
+      }
+
       mux := http.NewServeMux()
-      
+
       mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
           w.Header().Set("Content-Type", "application/json")
-          fmt.Fprintf(w, `{"status":"ok","version":"%s"}`, version)
+          fmt.Fprintf(w, `{"status":"ok","version":"%s","service":"shahadath-binaries"}`, appVersion)
       })
-      
+
       mux.HandleFunc("/install.sh", func(w http.ResponseWriter, r *http.Request) {
-          http.Redirect(w, r, "https://raw.githubusercontent.com/Ileana747/Shahadath-Turbo-Max/main/install.sh", http.StatusFound)
+          w.Header().Set("Cache-Control", "no-cache")
+          http.Redirect(w, r, rawBase+"/install.sh", http.StatusFound)
       })
-      
+
       mux.HandleFunc("/install.ps1", func(w http.ResponseWriter, r *http.Request) {
-          http.Redirect(w, r, "https://raw.githubusercontent.com/Ileana747/Shahadath-Turbo-Max/main/install.ps1", http.StatusFound)
+          w.Header().Set("Cache-Control", "no-cache")
+          http.Redirect(w, r, rawBase+"/install.ps1", http.StatusFound)
       })
-      
+
       mux.HandleFunc("/version.json", func(w http.ResponseWriter, r *http.Request) {
-          w.Header().Set("Content-Type", "application/json")
-          http.Redirect(w, r, "https://raw.githubusercontent.com/Ileana747/Shahadath-Turbo-Max/main/version.json", http.StatusFound)
+          w.Header().Set("Cache-Control", "no-cache")
+          http.Redirect(w, r, rawBase+"/version.json", http.StatusFound)
       })
-      
+
       mux.HandleFunc("/latest-version.txt", func(w http.ResponseWriter, r *http.Request) {
-          http.Redirect(w, r, "https://raw.githubusercontent.com/Ileana747/Shahadath-Turbo-Max/main/latest-version.txt", http.StatusFound)
+          w.Header().Set("Cache-Control", "no-cache")
+          http.Redirect(w, r, rawBase+"/latest-version.txt", http.StatusFound)
       })
-      
+
       mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
           path := strings.TrimPrefix(r.URL.Path, "/")
           parts := strings.Split(path, "/")
-          
-          checkPlatform := func(os_, arch string) bool {
-              platform := os_ + "/" + arch
+
+          tryPlatform := func(osName, arch string) bool {
+              platform := osName + "/" + arch
               if assetName, ok := binaryMap[platform]; ok {
                   http.Redirect(w, r, ghRelease+"/"+assetName, http.StatusFound)
                   return true
               }
               return false
           }
-          
-          if len(parts) >= 3 && checkPlatform(parts[0], parts[1]) { return }
-          if len(parts) >= 4 && parts[0] == "bin" && checkPlatform(parts[1], parts[2]) { return }
-          
+
+          // /{os}/{arch}/shahadath or /{os}/{arch}/shahadath.exe
+          if len(parts) >= 2 {
+              if tryPlatform(parts[0], parts[1]) {
+                  return
+              }
+          }
+
+          // /bin/{os}/{arch}/...
+          if len(parts) >= 3 && parts[0] == "bin" {
+              if tryPlatform(parts[1], parts[2]) {
+                  return
+              }
+          }
+
           http.NotFound(w, r)
       })
-      
-      log.Printf("SHAHADATH binary server v%s on :%s", version, port)
+
+      log.Printf("SHAHADATH binary server v%s listening on :%s", appVersion, port)
       log.Fatal(http.ListenAndServe(":"+port, mux))
   }
   

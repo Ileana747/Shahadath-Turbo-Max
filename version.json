@@ -1,22 +1,23 @@
 {
   "version": "1.0.0",
   "force_update": false,
-  "changelog": "Initial release — Normal/Turbo/Max download modes, AI assistant (Groq), Cookie manager, Telegram linking",
+  "changelog": "Initial release — video downloader with normal/turbo/max modes",
   "downloads": {
-    "linux/amd64":   "https://shahadath-turbo-max.onrender.com/bin/linux/amd64/shahadath",
-    "linux/arm64":   "https://shahadath-turbo-max.onrender.com/bin/linux/arm64/shahadath",
-    "linux/armv7":   "https://shahadath-turbo-max.onrender.com/bin/linux/armv7/shahadath",
-    "linux/386":     "https://shahadath-turbo-max.onrender.com/bin/linux/386/shahadath",
-    "linux/riscv64": "https://shahadath-turbo-max.onrender.com/bin/linux/riscv64/shahadath",
-    "android/arm64": "https://shahadath-turbo-max.onrender.com/bin/android/arm64/shahadath",
-    "android/armv7": "https://shahadath-turbo-max.onrender.com/bin/android/armv7/shahadath",
-    "darwin/amd64":  "https://shahadath-turbo-max.onrender.com/bin/darwin/amd64/shahadath",
-    "darwin/arm64":  "https://shahadath-turbo-max.onrender.com/bin/darwin/arm64/shahadath",
-    "windows/amd64": "https://shahadath-turbo-max.onrender.com/bin/windows/amd64/shahadath.exe",
-    "windows/arm64": "https://shahadath-turbo-max.onrender.com/bin/windows/arm64/shahadath.exe",
-    "windows/386":   "https://shahadath-turbo-max.onrender.com/bin/windows/386/shahadath.exe"
+    "linux/amd64": "https://shahadath-serve.onrender.com/linux/amd64/shahadath",
+    "linux/arm64": "https://shahadath-serve.onrender.com/linux/arm64/shahadath",
+    "linux/armv7": "https://shahadath-serve.onrender.com/linux/armv7/shahadath",
+    "linux/386": "https://shahadath-serve.onrender.com/linux/386/shahadath",
+    "linux/riscv64": "https://shahadath-serve.onrender.com/linux/riscv64/shahadath",
+    "android/arm64": "https://shahadath-serve.onrender.com/android/arm64/shahadath",
+    "android/armv7": "https://shahadath-serve.onrender.com/android/armv7/shahadath",
+    "darwin/amd64": "https://shahadath-serve.onrender.com/darwin/amd64/shahadath",
+    "darwin/arm64": "https://shahadath-serve.onrender.com/darwin/arm64/shahadath",
+    "windows/amd64": "https://shahadath-serve.onrender.com/windows/amd64/shahadath.exe",
+    "windows/arm64": "https://shahadath-serve.onrender.com/windows/arm64/shahadath.exe",
+    "windows/386": "https://shahadath-serve.onrender.com/windows/386/shahadath.exe"
   },
-  "install_sh":  "https://shahadath-turbo-max.onrender.com/install.sh",
-  "install_ps1": "https://shahadath-turbo-max.onrender.com/install.ps1",
-  "released_at": "2026-06-18"
+  "install_sh": "https://shahadath-serve.onrender.com/install.sh",
+  "install_ps1": "https://shahadath-serve.onrender.com/install.ps1",
+  "released_at": "2026-06-18",
+  "github_release": "https://github.com/Ileana747/Shahadath-Turbo-Max/releases/tag/v1.0.0"
 }
