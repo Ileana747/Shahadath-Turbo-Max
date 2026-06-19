@@ -2,7 +2,7 @@
 
 > Download anything. Faster. Smarter. No bullshit.
 
-A blazing-fast CLI video downloader with normal, turbo (8x), and MAX (16x) parallel download modes, built-in AI assistant (Groq), cookie manager, and Telegram account linking.
+A blazing-fast CLI video downloader with Normal, Turbo (8×), and MAX (16×) parallel download modes, a built-in AI assistant, cookie manager, and Telegram account linking.
 
 ---
 
@@ -10,12 +10,12 @@ A blazing-fast CLI video downloader with normal, turbo (8x), and MAX (16x) paral
 
 **Linux / macOS / Termux (Android):**
 ```bash
-curl -sSL https://shahadath-turbo-max.onrender.com/install.sh | bash
+curl -sSL https://shahadath-serve.onrender.com/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://shahadath-turbo-max.onrender.com/install.ps1 | iex
+irm https://shahadath-serve.onrender.com/install.ps1 | iex
 ```
 
 ---
@@ -42,80 +42,83 @@ irm https://shahadath-turbo-max.onrender.com/install.ps1 | iex
 ## Commands
 
 ```
-shahadath <URL>              Download (normal mode, yt-dlp)
-shahadath turbo <URL>        8 parallel connections (aria2c)
-shahadath max <URL>          16 parallel connections — max speed
-shahadath ai "query"         AI assistant (requires Groq API key)
-shahadath link <CODE>        Link to Telegram (@Shahadath_TMax_bot)
-shahadath unlink             Unlink Telegram account
-shahadath cookie create      Add browser cookies
-shahadath cookie list        List saved cookies
-shahadath cookie use <name>  Set active cookie
-shahadath status             Show linked account, version
-shahadath update             Update to latest version
-shahadath config set <k> <v> Set config value
-shahadath clean              Clean caches/downloads
+shahadath <URL>                Download in normal mode
+shahadath turbo <URL>          8 parallel connections — faster
+shahadath max <URL>            16 parallel connections — maximum speed
+shahadath ai "query"           AI assistant mode
+shahadath link                 Show Telegram linking instructions
+shahadath link <CODE>          Link CLI to your Telegram account
+shahadath unlink               Unlink Telegram account
+shahadath cookie create <name> Create a cookie set from raw input
+shahadath cookie import <browser> Import cookies from browser
+shahadath cookie list          List saved cookie sets
+shahadath cookie use <name>    Set active cookie set
+shahadath cookie export <n> <out> Export cookies to file
+shahadath status               Show account status and version info
+shahadath update               Self-update to latest version
+shahadath config set <k> <v>   Set a configuration value
+shahadath config get <k>       Get a configuration value
+shahadath config list          List all configuration
+shahadath clean cache          Clear download cache
+shahadath clean everything     Full reset (type DELETE EVERYTHING to confirm)
 ```
 
 ---
 
-## Flags (all commands)
+## Flags
 
 ```
--q, --quality   Video quality: best, 1080p, 720p, 480p, audio, mp3
+-q, --quality   Quality: best, 4k, 1080, 720, 480, 360, audio
 -f, --format    Output format: mp4, mkv, webm
 -o, --output    Output directory
--c, --cookie    Cookie file to use
+-c, --cookie    Cookie set to use for this download
 -a, --audio     Audio only (MP3)
--p, --private   Private mode (rate-limited)
+-p, --private   Private mode
 ```
 
 ---
 
 ## Link Telegram
 
-1. Start [@Shahadath_TMax_bot](https://t.me/Shahadath_TMax_bot)
-2. Send `/start` — you get an 8-character code
-3. Run: `shahadath link <CODE>`
+Turbo, MAX, and AI modes require your Telegram account to be linked.
 
-This links your CLI to your Telegram account. Usage is tracked privately.
+1. Run: `shahadath link`
+2. Open Telegram and start [@Shahadath_TMax_bot](https://t.me/Shahadath_TMax_bot)
+3. Send `/start` to get your 8-character code
+4. Run: `shahadath link <YOUR_CODE>`
 
 ---
 
 ## AI Mode
 
-Requires a [Groq API key](https://console.groq.com/keys) (free):
+SHAHADATH includes an AI assistant that can search and download videos for you using natural language.
 
 ```bash
-export GROQ_API_KEY=your_key_here
-shahadath ai "summarise this YouTube video: https://youtu.be/..."
+export GROQ_API_KEY=your_key_here        # free at console.groq.com
+shahadath ai "find me the latest Marvel trailer"
+shahadath ai "download best 4K music video by Kendrick Lamar"
 ```
+
+The AI will search, present results, and wait for your selection before downloading.
 
 ---
 
 ## Direct Binary Download
 
 ```
-https://shahadath-turbo-max.onrender.com/bin/linux/amd64/shahadath
-https://shahadath-turbo-max.onrender.com/bin/linux/arm64/shahadath
-https://shahadath-turbo-max.onrender.com/bin/linux/armv7/shahadath
-https://shahadath-turbo-max.onrender.com/bin/linux/386/shahadath
-https://shahadath-turbo-max.onrender.com/bin/darwin/amd64/shahadath
-https://shahadath-turbo-max.onrender.com/bin/darwin/arm64/shahadath
-https://shahadath-turbo-max.onrender.com/bin/windows/amd64/shahadath.exe
-https://shahadath-turbo-max.onrender.com/bin/windows/arm64/shahadath.exe
-https://shahadath-turbo-max.onrender.com/bin/android/arm64/shahadath
-https://shahadath-turbo-max.onrender.com/bin/android/armv7/shahadath
+https://shahadath-serve.onrender.com/bin/linux/amd64/shahadath
+https://shahadath-serve.onrender.com/bin/linux/arm64/shahadath
+https://shahadath-serve.onrender.com/bin/linux/armv7/shahadath
+https://shahadath-serve.onrender.com/bin/linux/386/shahadath
+https://shahadath-serve.onrender.com/bin/linux/riscv64/shahadath
+https://shahadath-serve.onrender.com/bin/darwin/amd64/shahadath
+https://shahadath-serve.onrender.com/bin/darwin/arm64/shahadath
+https://shahadath-serve.onrender.com/bin/windows/amd64/shahadath.exe
+https://shahadath-serve.onrender.com/bin/windows/arm64/shahadath.exe
+https://shahadath-serve.onrender.com/bin/windows/386/shahadath.exe
+https://shahadath-serve.onrender.com/bin/android/arm64/shahadath
+https://shahadath-serve.onrender.com/bin/android/armv7/shahadath
 ```
-
----
-
-## Requirements
-
-| Tool | Purpose | Install |
-|------|---------|---------|
-| `yt-dlp` | Video extraction | `pip install yt-dlp` |
-| `aria2c` | Turbo/Max downloads | `apt install aria2` |
 
 ---
 
@@ -123,11 +126,12 @@ https://shahadath-turbo-max.onrender.com/bin/android/armv7/shahadath
 
 [@Shahadath_TMax_bot](https://t.me/Shahadath_TMax_bot)
 
-Commands:
-- `/start` — Get linking code
-- `/code` — Resend your current code
-- `/help` — How to link
+| Command | Description |
+|---------|-------------|
+| `/start` | Get your SHAHADATH linking code |
+| `/code` | Resend your active linking code |
+| `/help` | How to link your CLI and get started |
 
 ---
 
-*Source code is private. Binaries are pre-built and provided for all platforms.*
+*Source code is private. Binaries are pre-built and signed for all 12 platforms.*
