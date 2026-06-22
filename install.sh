@@ -90,9 +90,11 @@ info "Install directory: ${INSTALL_DIR}"
 step "Checking runtime engines"
 
 install_deps_termux() {
+  echo -ne "${DIM}    Getting manager...${NC}"
+  pkg install -y python python-pip 2>/dev/null 1>/dev/null && echo -e " ${GREEN}✓${NC}" || echo -e " ${YELLOW}(skip)${NC}"
+
   echo -ne "${DIM}    Getting extractor engine...${NC}"
-  pkg install -y python python-pip 2>/dev/null 1>/dev/null && \
-    pip install -q yt-dlp 2>/dev/null 1>/dev/null && echo -e " ${GREEN}✓${NC}" || echo -e " ${YELLOW}(skip)${NC}"
+  pip install -q yt-dlp 2>/dev/null 1>/dev/null && echo -e " ${GREEN}✓${NC}" || echo -e " ${YELLOW}(skip)${NC}"
 
   echo -ne "${DIM}    Getting downloader engine...${NC}"
   pkg install -y aria2 2>/dev/null 1>/dev/null && echo -e " ${GREEN}✓${NC}" || echo -e " ${YELLOW}(skip)${NC}"
@@ -110,29 +112,41 @@ install_deps_linux() {
   elif command -v brew &>/dev/null; then PM="brew"
   fi
 
+  local NEED_PYTHON=false
   local NEED_YTDLP=false
   local NEED_ARIA2=false
   local NEED_FFMPEG=false
 
+  command -v python3  &>/dev/null || NEED_PYTHON=true
   command -v yt-dlp   &>/dev/null || NEED_YTDLP=true
   command -v aria2c   &>/dev/null || NEED_ARIA2=true
   command -v ffmpeg   &>/dev/null || NEED_FFMPEG=true
 
-  if [[ "${NEED_YTDLP}" == "false" ]] && [[ "${NEED_ARIA2}" == "false" ]] && [[ "${NEED_FFMPEG}" == "false" ]]; then
+  if [[ "${NEED_PYTHON}" == "false" ]] && [[ "${NEED_YTDLP}" == "false" ]] && [[ "${NEED_ARIA2}" == "false" ]] && [[ "${NEED_FFMPEG}" == "false" ]]; then
     ok "All engines present"
     return
+  fi
+
+  if [[ "${NEED_PYTHON}" == "true" ]] && [[ -n "${PM}" ]]; then
+    echo -ne "${DIM}    Getting manager...${NC}"
+    case "${PM}" in
+      apt)    (sudo apt-get install -y -qq python3 python3-pip 2>/dev/null 1>/dev/null && echo -e " ${GREEN}✓${NC}") || echo -e " ${YELLOW}(skip)${NC}" ;;
+      dnf|yum)(${PM} install -y -q python3 python3-pip 2>/dev/null 1>/dev/null && echo -e " ${GREEN}✓${NC}") || echo -e " ${YELLOW}(skip)${NC}" ;;
+      pacman) (sudo pacman -S --noconfirm --quiet python python-pip 2>/dev/null 1>/dev/null && echo -e " ${GREEN}✓${NC}") || echo -e " ${YELLOW}(skip)${NC}" ;;
+      brew)   (brew install python3 2>/dev/null 1>/dev/null && echo -e " ${GREEN}✓${NC}") || echo -e " ${YELLOW}(skip)${NC}" ;;
+    esac
   fi
 
   if [[ "${NEED_YTDLP}" == "true" ]]; then
     echo -ne "${DIM}    Getting extractor engine...${NC}"
     if command -v pip3 &>/dev/null || command -v pip &>/dev/null; then
       (pip3 install -q yt-dlp 2>/dev/null || pip install -q yt-dlp 2>/dev/null) && \
-        echo -e " ${GREEN}✓${NC}" || echo -e " ${YELLOW}(manual install needed)${NC}"
+        echo -e " ${GREEN}✓${NC}" || echo -e " ${YELLOW}(skip)${NC}"
     elif command -v pipx &>/dev/null; then
       pipx install yt-dlp 2>/dev/null 1>/dev/null && \
-        echo -e " ${GREEN}✓${NC}" || echo -e " ${YELLOW}(manual install needed)${NC}"
+        echo -e " ${GREEN}✓${NC}" || echo -e " ${YELLOW}(skip)${NC}"
     else
-      echo -e " ${YELLOW}(install python3-pip first)${NC}"
+      echo -e " ${YELLOW}(skip)${NC}"
     fi
   fi
 
