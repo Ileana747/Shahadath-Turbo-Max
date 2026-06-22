@@ -1,137 +1,128 @@
 # SHAHADATH TURBO MAX ⚡
 
-> Download anything. Faster. Smarter. No bullshit.
+  > Download anything. Faster. Smarter.
 
-A blazing-fast CLI video downloader with Normal, Turbo (8×), and MAX (16×) parallel download modes, a built-in AI assistant, cookie manager, and Telegram account linking.
+  A blazing-fast CLI video downloader with Normal, Turbo (8×), and MAX (16×) parallel download modes, a built-in AI assistant, cookie manager, and Telegram account linking.
 
----
+  ---
 
-## Quick Install
+  ## Quick Install
 
-**Linux / macOS / Termux (Android):**
-```bash
-curl -sSL https://shahadath-serve.onrender.com/install.sh | bash
-```
+  **Linux / macOS / Termux (Android):**
+  ```bash
+  curl -sSL https://shahadath-serve.onrender.com/install.sh | bash
+  ```
 
-**Windows (PowerShell):**
-```powershell
-irm https://shahadath-serve.onrender.com/install.ps1 | iex
-```
+  **Windows (PowerShell):**
+  ```powershell
+  irm https://shahadath-serve.onrender.com/install.ps1 | iex
+  ```
 
----
+  ---
 
-## Supported Platforms
+  ## Supported Platforms
 
-| Platform | Architecture | Status |
-|----------|-------------|--------|
-| Linux | amd64 (x86_64) | ✅ |
-| Linux | arm64 (aarch64) | ✅ |
-| Linux | armv7 (Raspberry Pi 2/3) | ✅ |
-| Linux | 386 (32-bit) | ✅ |
-| Linux | riscv64 | ✅ |
-| macOS | amd64 (Intel) | ✅ |
-| macOS | arm64 (M1/M2/M3) | ✅ |
-| Windows | amd64 | ✅ |
-| Windows | arm64 | ✅ |
-| Windows | 386 | ✅ |
-| Android (Termux) | arm64 | ✅ |
-| Android (Termux) | armv7 | ✅ |
+  | Platform | Architecture | Status |
+  |----------|-------------|--------|
+  | Linux | amd64 (x86_64) | ✅ |
+  | Linux | arm64 (aarch64) | ✅ |
+  | Linux | armv7 (Raspberry Pi 2/3) | ✅ |
+  | Linux | 386 (32-bit) | ✅ |
+  | macOS | amd64 (Intel) | ✅ |
+  | macOS | arm64 (M1/M2/M3) | ✅ |
+  | Windows | amd64 | ✅ |
+  | Windows | arm64 | ✅ |
+  | Windows | 386 | ✅ |
+  | Android (Termux) | arm64 | ✅ |
+  | Android (Termux) | armv7 | ✅ |
 
----
+  ---
 
-## Commands
+  ## Commands
 
-```
-shahadath <URL>                Download in normal mode
-shahadath turbo <URL>          8 parallel connections — faster
-shahadath max <URL>            16 parallel connections — maximum speed
-shahadath ai "query"           AI assistant mode
-shahadath link                 Show Telegram linking instructions
-shahadath link <CODE>          Link CLI to your Telegram account
-shahadath unlink               Unlink Telegram account
-shahadath cookie create <name> Create a cookie set from raw input
-shahadath cookie import <browser> Import cookies from browser
-shahadath cookie list          List saved cookie sets
-shahadath cookie use <name>    Set active cookie set
-shahadath cookie export <n> <out> Export cookies to file
-shahadath status               Show account status and version info
-shahadath update               Self-update to latest version
-shahadath config set <k> <v>   Set a configuration value
-shahadath config get <k>       Get a configuration value
-shahadath config list          List all configuration
-shahadath clean cache          Clear download cache
-shahadath clean everything     Full reset (type DELETE EVERYTHING to confirm)
-```
+  ```
+  shahadath <URL>                Download in normal mode
+  shahadath turbo <URL>          8 parallel connections — faster
+  shahadath max <URL>            16 parallel connections — maximum speed
+  shahadath ai "query"           AI assistant mode
+  shahadath link                 Show Telegram linking instructions
+  shahadath link <CODE>          Link CLI to your Telegram account
+  shahadath unlink               Unlink Telegram account
+  shahadath cookie create <name> Create a cookie set from raw input
+  shahadath cookie list          List saved cookie sets
+  shahadath cookie use <name>    Set active cookie set
+  shahadath status               Show account status and version info
+  shahadath update               Self-update to latest version
+  shahadath clean cache          Clear download cache
+  ```
 
----
+  ---
 
-## Flags
+  ## Flags
 
-```
--q, --quality   Quality: best, 4k, 1080, 720, 480, 360, audio
--f, --format    Output format: mp4, mkv, webm
--o, --output    Output directory
--c, --cookie    Cookie set to use for this download
--a, --audio     Audio only (MP3)
--p, --private   Private mode
-```
+  ```
+  -q, --quality   Quality: best, 4k, 1080p, 720p, 480p, 360p, audio
+  -f, --format    Output format: mp4, mkv, webm
+  -o, --output    Output directory
+  -c, --cookie    Cookie set to use for this download
+  -a, --audio     Audio only (MP3)
+  -p, --private   Private mode
+  ```
 
----
+  ---
 
-## Link Telegram
+  ## Link Telegram
 
-Turbo, MAX, and AI modes require your Telegram account to be linked.
+  Turbo, MAX, and AI modes require your Telegram account to be linked.
 
-1. Run: `shahadath link`
-2. Open Telegram and start [@Shahadath_TMax_bot](https://t.me/Shahadath_TMax_bot)
-3. Send `/start` to get your 8-character code
-4. Run: `shahadath link <YOUR_CODE>`
+  1. Run: `shahadath link`
+  2. Open Telegram: [@Shahadath_TMax_bot](https://t.me/Shahadath_TMax_bot)
+  3. Send `/start` to get your 8-character code
+  4. Run: `shahadath link <YOUR_CODE>`
 
----
+  ---
 
-## AI Mode
+  ## AI Mode
 
-SHAHADATH includes an AI assistant that can search and download videos for you using natural language.
+  SHAHADATH includes an AI assistant that can search and download videos using natural language.
 
-```bash
-export GROQ_API_KEY=your_key_here        # free at console.groq.com
-shahadath ai "find me the latest Marvel trailer"
-shahadath ai "download best 4K music video by Kendrick Lamar"
-```
+  ```bash
+  shahadath ai "find me the latest Marvel trailer"
+  shahadath ai "download best 4K music video by Kendrick Lamar"
+  ```
 
-The AI will search, present results, and wait for your selection before downloading.
+  The AI will search, present results, and wait for your selection before downloading.
 
----
+  ---
 
-## Direct Binary Download
+  ## Direct Binary Download
 
-```
-https://shahadath-serve.onrender.com/bin/linux/amd64/shahadath
-https://shahadath-serve.onrender.com/bin/linux/arm64/shahadath
-https://shahadath-serve.onrender.com/bin/linux/armv7/shahadath
-https://shahadath-serve.onrender.com/bin/linux/386/shahadath
-https://shahadath-serve.onrender.com/bin/linux/riscv64/shahadath
-https://shahadath-serve.onrender.com/bin/darwin/amd64/shahadath
-https://shahadath-serve.onrender.com/bin/darwin/arm64/shahadath
-https://shahadath-serve.onrender.com/bin/windows/amd64/shahadath.exe
-https://shahadath-serve.onrender.com/bin/windows/arm64/shahadath.exe
-https://shahadath-serve.onrender.com/bin/windows/386/shahadath.exe
-https://shahadath-serve.onrender.com/bin/android/arm64/shahadath
-https://shahadath-serve.onrender.com/bin/android/armv7/shahadath
-```
+  ```
+  https://shahadath-serve.onrender.com/bin/linux/amd64/shahadath
+  https://shahadath-serve.onrender.com/bin/linux/arm64/shahadath
+  https://shahadath-serve.onrender.com/bin/linux/armv7/shahadath
+  https://shahadath-serve.onrender.com/bin/linux/386/shahadath
+  https://shahadath-serve.onrender.com/bin/darwin/amd64/shahadath
+  https://shahadath-serve.onrender.com/bin/darwin/arm64/shahadath
+  https://shahadath-serve.onrender.com/bin/windows/amd64/shahadath.exe
+  https://shahadath-serve.onrender.com/bin/windows/arm64/shahadath.exe
+  https://shahadath-serve.onrender.com/bin/windows/386/shahadath.exe
+  https://shahadath-serve.onrender.com/bin/android/arm64/shahadath
+  https://shahadath-serve.onrender.com/bin/android/armv7/shahadath
+  ```
 
----
+  ---
 
-## Telegram Bot
+  ## Telegram Bot
 
-[@Shahadath_TMax_bot](https://t.me/Shahadath_TMax_bot)
+  [@Shahadath_TMax_bot](https://t.me/Shahadath_TMax_bot)
 
-| Command | Description |
-|---------|-------------|
-| `/start` | Get your SHAHADATH linking code |
-| `/code` | Resend your active linking code |
-| `/help` | How to link your CLI and get started |
+  | Command | Description |
+  |---------|-------------|
+  | `/start` | Get your SHAHADATH linking code |
+  | `/code` | Resend your active linking code |
 
----
+  ---
 
-*Source code is private. Binaries are pre-built and signed for all 12 platforms.*
+  *Binaries are pre-built for all platforms. Source code is private.*
+  
