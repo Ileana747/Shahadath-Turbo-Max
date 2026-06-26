@@ -22,7 +22,8 @@ jobs:
         run: |
           uv venv
           source .venv/bin/activate
-          uv pip install --upgrade truss
+          uv pip install truss
+          echo "✅ truss installed successfully"
 
       - name: Create Truss directory and config
         run: |
@@ -82,37 +83,87 @@ jobs:
             predict_endpoint: /v1/chat/completions
             server_port: 8000
           EOF
+          echo "✅ config.yaml created successfully"
 
       - name: Login to Baseten
+        id: login
         run: |
           source .venv/bin/activate
-          truss login --api-key "1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA"
+          export BASETEN_API_KEY="1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA"
+          truss login --api-key "$BASETEN_API_KEY"
+          echo "✅ Logged in to Baseten successfully"
 
       - name: Push model to Baseten
         id: deploy
         run: |
           source .venv/bin/activate
-          OUTPUT=$(truss push qwen-uncensored --publish)
+          export BASETEN_API_KEY="1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA"
+          
+          echo "🚀 Starting deployment..."
+          OUTPUT=$(truss push qwen-uncensored --publish 2>&1)
           echo "$OUTPUT"
-          MODEL_ID=$(echo "$OUTPUT" | grep -o 'Model ID: [a-zA-Z0-9_-]*' | awk '{print $3}')
-          DEPLOYMENT_ID=$(echo "$OUTPUT" | grep -o 'Deployment ID: [a-zA-Z0-9_-]*' | awk '{print $3}')
+          
+          MODEL_ID=$(echo "$OUTPUT" | grep -oE 'Model ID: [a-zA-Z0-9_-]+' | head -1 | sed 's/Model ID: //')
+          DEPLOYMENT_ID=$(echo "$OUTPUT" | grep -oE 'Deployment ID: [a-zA-Z0-9_-]+' | head -1 | sed 's/Deployment ID: //')
+          
+          if [ -z "$MODEL_ID" ] || [ -z "$DEPLOYMENT_ID" ]; then
+            echo "❌ Failed to extract model/deployment IDs from output"
+            echo "Full output: $OUTPUT"
+            exit 1
+          fi
+          
           echo "model_id=$MODEL_ID" >> $GITHUB_OUTPUT
           echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+          echo "✅ Model deployed successfully"
+
+      - name: Wait for deployment to be ready
+        run: |
+          echo "⏳ Waiting for deployment to be ready..."
+          sleep 30
+          echo "✅ Deployment should be ready now"
 
       - name: Set scale-down-delay to 0 seconds
         run: |
           MODEL_ID="${{ steps.deploy.outputs.model_id }}"
           DEPLOYMENT_ID="${{ steps.deploy.outputs.deployment_id }}"
-          curl --request PATCH \
+          
+          echo "⚙️ Setting scale-down-delay to 0 seconds for model $MODEL_ID..."
+          
+          RESPONSE=$(curl --request PATCH \
             --url "https://api.baseten.co/v1/models/${MODEL_ID}/deployments/${DEPLOYMENT_ID}/autoscaling_settings" \
             --header "Authorization: Bearer 1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA" \
             --header "Content-Type: application/json" \
-            --data '{"scale_down_delay": 0}'
+            --data '{"scale_down_delay": 0}' \
+            --write-out "\n%{http_code}" \
+            --silent)
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 204 ]; then
+            echo "✅ Autoscaling settings updated successfully"
+          else
+            echo "⚠️ Failed to update autoscaling settings (HTTP $HTTP_CODE)"
+            echo "Response: $BODY"
+          fi
 
-      - name: Print endpoint URL
+      - name: Print deployment details
         run: |
           MODEL_ID="${{ steps.deploy.outputs.model_id }}"
-          echo "✅ Model deployed successfully!"
+          DEPLOYMENT_ID="${{ steps.deploy.outputs.deployment_id }}"
+          
+          echo ""
+          echo "========================================"
+          echo "✅ DEPLOYMENT COMPLETE!"
+          echo "========================================"
+          echo "📊 Model ID: $MODEL_ID"
+          echo "📊 Deployment ID: $DEPLOYMENT_ID"
           echo "🔗 Endpoint URL: https://model-${MODEL_ID}.api.baseten.co/environments/production/sync/v1/chat/completions"
-          echo "📊 Model ID: ${MODEL_ID}"
-          echo "📊 Deployment ID: ${{ steps.deploy.outputs.deployment_id }}"
+          echo "========================================"
+          echo ""
+          echo "🎯 Test your model with:"
+          echo "curl -X POST https://model-${MODEL_ID}.api.baseten.co/environments/production/sync/v1/chat/completions \\"
+          echo "  -H 'Authorization: Bearer 1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA' \\"
+          echo "  -H 'Content-Type: application/json' \\"
+          echo "  -d '{\"model\":\"Qwen/Qwen3.6-27B\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":512}'"
+          echo ""
