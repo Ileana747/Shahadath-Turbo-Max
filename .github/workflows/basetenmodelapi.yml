@@ -13,6 +13,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install Python and uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Install Truss and dependencies
+        run: uv pip install --system --upgrade truss
+
       - name: Create Truss directory and config
         run: |
           mkdir -p qwen-uncensored
@@ -72,18 +80,23 @@ jobs:
             server_port: 8000
           EOF
 
-      - name: Deploy to Baseten
+      - name: Login to Baseten
+        run: uvx truss login --api-key "1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA"
+
+      - name: Push model to Baseten
         id: deploy
-        uses: basetenlabs/action-truss-push@v0.1
-        with:
-          truss-directory: "./qwen-uncensored"
-          baseten-api-key: "1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA"
-          cleanup: false
+        run: |
+          OUTPUT=$(uvx truss push qwen-uncensored --publish --yes)
+          echo "$OUTPUT"
+          MODEL_ID=$(echo "$OUTPUT" | grep -o 'Model ID: [a-zA-Z0-9_-]*' | awk '{print $3}')
+          DEPLOYMENT_ID=$(echo "$OUTPUT" | grep -o 'Deployment ID: [a-zA-Z0-9_-]*' | awk '{print $3}')
+          echo "model_id=$MODEL_ID" >> $GITHUB_OUTPUT
+          echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
 
       - name: Set scale-down-delay to 0 seconds
         run: |
-          MODEL_ID="${{ steps.deploy.outputs.model-id }}"
-          DEPLOYMENT_ID="${{ steps.deploy.outputs.deployment-id }}"
+          MODEL_ID="${{ steps.deploy.outputs.model_id }}"
+          DEPLOYMENT_ID="${{ steps.deploy.outputs.deployment_id }}"
           curl --request PATCH \
             --url "https://api.baseten.co/v1/models/${MODEL_ID}/deployments/${DEPLOYMENT_ID}/autoscaling_settings" \
             --header "Authorization: Bearer 1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA" \
@@ -92,9 +105,8 @@ jobs:
 
       - name: Print endpoint URL
         run: |
-          MODEL_ID="${{ steps.deploy.outputs.model-id }}"
+          MODEL_ID="${{ steps.deploy.outputs.model_id }}"
           echo "✅ Model deployed successfully!"
           echo "🔗 Endpoint URL: https://model-${MODEL_ID}.api.baseten.co/environments/production/sync/v1/chat/completions"
           echo "📊 Model ID: ${MODEL_ID}"
-          echo "📊 Deployment ID: ${{ steps.deploy.outputs.deployment-id }}"
-          echo "📊 Status: ${{ steps.deploy.outputs.status }}"
+          echo "📊 Deployment ID: ${{ steps.deploy.outputs.deployment_id }}"
