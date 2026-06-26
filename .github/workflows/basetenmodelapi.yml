@@ -18,8 +18,11 @@ jobs:
         with:
           version: "latest"
 
-      - name: Install Truss with break-system-packages
-        run: uv pip install --system --break-system-packages --upgrade truss
+      - name: Install Truss with --user flag
+        run: uv pip install --user --upgrade truss
+
+      - name: Add ~/.local/bin to PATH
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Create Truss directory and config
         run: |
