@@ -18,8 +18,8 @@ jobs:
         with:
           version: "latest"
 
-      - name: Install Truss and dependencies
-        run: uv pip install --system --upgrade truss
+      - name: Install Truss with break-system-packages
+        run: uv pip install --system --break-system-packages --upgrade truss
 
       - name: Create Truss directory and config
         run: |
@@ -81,12 +81,12 @@ jobs:
           EOF
 
       - name: Login to Baseten
-        run: uvx truss login --api-key "1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA"
+        run: truss login --api-key "1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA"
 
       - name: Push model to Baseten
         id: deploy
         run: |
-          OUTPUT=$(uvx truss push qwen-uncensored --publish --yes)
+          OUTPUT=$(truss push qwen-uncensored --publish --yes)
           echo "$OUTPUT"
           MODEL_ID=$(echo "$OUTPUT" | grep -o 'Model ID: [a-zA-Z0-9_-]*' | awk '{print $3}')
           DEPLOYMENT_ID=$(echo "$OUTPUT" | grep -o 'Deployment ID: [a-zA-Z0-9_-]*' | awk '{print $3}')
