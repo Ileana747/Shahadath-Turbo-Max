@@ -1,4 +1,4 @@
-name: Deploy Qwen Uncesored to Baseten
+name: Deploy Qwen Uncensored to Baseten
 
 on:
   workflow_dispatch:
@@ -18,11 +18,11 @@ jobs:
         with:
           version: "latest"
 
-      - name: Install Truss with --user flag
-        run: uv pip install --user --upgrade truss
-
-      - name: Add ~/.local/bin to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Create virtual environment and install truss
+        run: |
+          uv venv
+          source .venv/bin/activate
+          uv pip install --upgrade truss
 
       - name: Create Truss directory and config
         run: |
@@ -84,11 +84,14 @@ jobs:
           EOF
 
       - name: Login to Baseten
-        run: truss login --api-key "1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA"
+        run: |
+          source .venv/bin/activate
+          truss login --api-key "1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA"
 
       - name: Push model to Baseten
         id: deploy
         run: |
+          source .venv/bin/activate
           OUTPUT=$(truss push qwen-uncensored --publish --yes)
           echo "$OUTPUT"
           MODEL_ID=$(echo "$OUTPUT" | grep -o 'Model ID: [a-zA-Z0-9_-]*' | awk '{print $3}')
