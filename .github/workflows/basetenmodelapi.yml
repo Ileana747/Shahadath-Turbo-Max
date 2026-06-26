@@ -15,12 +15,13 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Modal CLI and dependencies
+      # --- ONLY INSTALL MODAL CLI ---
+      - name: Install Modal CLI
         run: |
           pip install --upgrade pip
-          pip install modal vllm huggingface-hub
+          pip install modal
 
-      # --- HARDCODED MODAL CREDENTIALS (TEST ACCOUNT) ---
+      # --- HARDCODED MODAL CREDENTIALS ---
       - name: Authenticate Modal
         run: |
           modal token set \
@@ -30,6 +31,7 @@ jobs:
       - name: Verify Modal Authentication
         run: modal profile list
 
+      # --- DEPLOY ---
       - name: Deploy Qwen 27B Server
         id: deploy
         run: |
@@ -38,16 +40,16 @@ jobs:
           echo "DEPLOY_URL=$DEPLOY_URL" >> $GITHUB_OUTPUT
           echo "Deployment URL: $DEPLOY_URL"
 
+      # --- WAIT AND TEST ---
       - name: Wait for server to be ready
         run: |
           URL="${{ steps.deploy.outputs.DEPLOY_URL }}"
-          echo "Waiting for server at $URL to be ready..."
           for i in {1..30}; do
             if curl -s -o /dev/null -w "%{http_code}" "$URL/health" | grep -q "200"; then
               echo "Server is ready!"
               break
             fi
-            echo "Attempt $i: Server not ready yet, waiting 10s..."
+            echo "Attempt $i: Waiting..."
             sleep 10
           done
 
@@ -57,40 +59,7 @@ jobs:
           echo "=========================================="
           echo "  QWEN 27B DEPLOYMENT COMPLETE"
           echo "=========================================="
-          echo ""
-          echo "📍 API Endpoint:"
-          echo "   $URL"
-          echo ""
-          echo "🔌 OpenAI-Compatible Endpoints:"
-          echo "   POST $URL/v1/chat/completions"
-          echo "   POST $URL/v1/completions"
-          echo "   GET  $URL/v1/models"
-          echo "   GET  $URL/health"
-          echo ""
-          echo "📚 Interactive API Docs:"
-          echo "   $URL/docs"
-          echo ""
-          echo "=========================================="
-
-      - name: Quick test with curl
-        run: |
-          URL="${{ steps.deploy.outputs.DEPLOY_URL }}"
-          echo "Sending test request..."
-          curl -X POST "$URL/v1/chat/completions" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "model": "qwen-27b",
-              "messages": [
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "Hello! Say I am alive in 3 words."}
-              ],
-              "max_tokens": 20
-            }' | jq '.choices[0].message.content'
-
-      - name: Display Modal App Dashboard
-        run: |
-          echo "=========================================="
-          echo "  VIEW IN MODAL DASHBOARD"
-          echo "=========================================="
-          echo "https://modal.com/apps/shahadathakhand747/main/deployed/qwen-27b-server"
+          echo "📍 API Endpoint: $URL"
+          echo "🔌 POST $URL/v1/chat/completions"
+          echo "📚 Docs: $URL/docs"
           echo "=========================================="
