@@ -92,7 +92,7 @@ jobs:
         id: deploy
         run: |
           source .venv/bin/activate
-          OUTPUT=$(truss push qwen-uncensored --publish --yes)
+          OUTPUT=$(truss push qwen-uncensored --publish)
           echo "$OUTPUT"
           MODEL_ID=$(echo "$OUTPUT" | grep -o 'Model ID: [a-zA-Z0-9_-]*' | awk '{print $3}')
           DEPLOYMENT_ID=$(echo "$OUTPUT" | grep -o 'Deployment ID: [a-zA-Z0-9_-]*' | awk '{print $3}')
