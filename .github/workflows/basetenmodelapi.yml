@@ -1,4 +1,4 @@
-name: Deploy Qwen Uncensored to Baseten (Single L4)
+name: Deploy Qwen to Baseten (TRT-LLM)
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
         with:
           version: "latest"
 
-      - name: Install latest truss
+      - name: Install truss
         run: |
           uv venv
           source .venv/bin/activate
@@ -46,41 +46,23 @@ jobs:
             accelerator: L4
             use_gpu: true
 
-          base_image:
-            image: ghcr.io/aeon-7/aeon-vllm-ultimate:latest
-
-          docker_server:
-            start_command: >-
-              vllm serve /app/checkpoint/model
-              --served-model-name Qwen/Qwen3.6-27B
-              --host 0.0.0.0
-              --port 8000
-              --trust-remote-code
-              --quantization modelopt
-              --max-model-len 131072
-              --max-num-seqs 16
-              --max-num-batched-tokens 8192
-              --gpu-memory-utilization 0.94
-              --enable-chunked-prefill
-              --enable-prefix-caching
-              --reasoning-parser qwen3
-              --tool-call-parser qwen3_coder
-              --enable-auto-tool-choice
-              --speculative-config '{"method":"qwen3_5_mtp","num_speculative_tokens":3}'
-            readiness_endpoint: /health
-            liveness_endpoint: /health
-            predict_endpoint: /v1/chat/completions
-            server_port: 8000
-
-          environment_variables:
-            VLLM_NVFP4_GEMM_BACKEND: "flashinfer-cutlass"
-            VLLM_USE_FLASHINFER_MOE_FP4: "0"
-            VLLM_USE_FLASHINFER_SAMPLER: "1"
-            VLLM_LOGGING_LEVEL: "WARNING"
-
-          weights:
-            - source: "hf://AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-Text-NVFP4-MTP-XS@main"
-              mount_location: "/app/checkpoint/model"
+          trt_llm:
+            build:
+              base_model: decoder
+              checkpoint_repository:
+                source: HF
+                repo: "AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-Text-NVFP4-MTP-XS"
+              max_seq_len: 131072
+              quantization_type: no_quant
+              tensor_parallel_count: 1
+              plugin_configuration:
+                paged_kv_cache: true
+                use_paged_context_fmha: true
+            runtime:
+              kv_cache_free_gpu_mem_fraction: 0.9
+              enable_chunked_context: true
+              batch_scheduler_policy: guaranteed_no_evict
+              served_model_name: "Qwen/Qwen3.6-27B"
           EOF
 
       - name: Login to Baseten
@@ -131,4 +113,10 @@ jobs:
           echo "📊 Model ID: $MODEL_ID"
           echo "📊 Deployment ID: ${{ steps.deploy.outputs.deployment_id }}"
           echo "🔗 Endpoint URL: https://model-${MODEL_ID}.api.baseten.co/environments/production/sync/v1/chat/completions"
+          echo ""
+          echo "🧠 To use reasoning parser:"
+          echo "curl -X POST https://model-${MODEL_ID}.api.baseten.co/environments/production/sync/v1/chat/completions \\"
+          echo "  -H 'Authorization: Bearer 1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA' \\"
+          echo "  -H 'Content-Type: application/json' \\"
+          echo "  -d '{\"model\":\"Qwen/Qwen3.6-27B\",\"messages\":[{\"role\":\"user\",\"content\":\"Write a Go CLI\"}],\"reasoning_parser\":\"qwen3\",\"tool_parser\":\"qwen3_coder\"}'"
           echo "========================================"
