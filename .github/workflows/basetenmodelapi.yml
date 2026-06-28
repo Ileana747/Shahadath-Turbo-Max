@@ -18,11 +18,11 @@ jobs:
         with:
           version: "latest"
 
-      - name: Install truss
+      - name: Install latest truss
         run: |
           uv venv
           source .venv/bin/activate
-          uv pip install truss
+          uv pip install --upgrade truss
 
       - name: Create Truss directory and config.yaml
         run: |
@@ -45,8 +45,6 @@ jobs:
           resources:
             accelerator: L4
             use_gpu: true
-
-          inference_stack: v2
 
           docker_server:
             image: ghcr.io/aeon-7/aeon-vllm-ultimate:latest
