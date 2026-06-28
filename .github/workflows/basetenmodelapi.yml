@@ -1,65 +1,134 @@
-name: Deploy Qwen3.6-27B on Modal
+name: Deploy Qwen Uncensored to Baseten (Single L4)
 
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  deploy-qwen:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Install Python and uv
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.12'
+          version: "latest"
 
-      # --- ONLY INSTALL MODAL CLI ---
-      - name: Install Modal CLI
+      - name: Install truss
         run: |
-          pip install --upgrade pip
-          pip install modal
+          uv venv
+          source .venv/bin/activate
+          uv pip install truss
 
-      # --- HARDCODED MODAL CREDENTIALS ---
-      - name: Authenticate Modal
+      - name: Create Truss directory and config.yaml
         run: |
-          modal token set \
-            --token-id "ak-QB54iLlrnJZuw3T4MkGath" \
-            --token-secret "as-nVpWbpGx9jk81qyMrykgbS"
+          mkdir -p qwen-aeon
+          cat > qwen-aeon/config.yaml << 'EOF'
+          model_name: "qwen-aeon-single-l4"
 
-      - name: Verify Modal Authentication
-        run: modal profile list
+          model_metadata:
+            example_model_input:
+              model: "Qwen/Qwen3.6-27B"
+              messages:
+                - role: user
+                  content: "What is the capital of France?"
+              max_tokens: 512
+              temperature: 1.0
+              top_p: 0.95
+            tags:
+              - openai-compatible
 
-      # --- DEPLOY ---
-      - name: Deploy Qwen 27B Server
+          resources:
+            accelerator: L4
+            use_gpu: true
+
+          inference_stack: v2
+
+          docker_server:
+            image: ghcr.io/aeon-7/aeon-vllm-ultimate:latest
+            start_command: >-
+              vllm serve /app/checkpoint/model
+              --served-model-name Qwen/Qwen3.6-27B
+              --host 0.0.0.0
+              --port 8000
+              --trust-remote-code
+              --quantization modelopt
+              --max-model-len 131072
+              --max-num-seqs 16
+              --max-num-batched-tokens 8192
+              --gpu-memory-utilization 0.94
+              --enable-chunked-prefill
+              --enable-prefix-caching
+              --reasoning-parser qwen3
+              --tool-call-parser qwen3_coder
+              --enable-auto-tool-choice
+              --speculative-config '{"method":"qwen3_5_mtp","num_speculative_tokens":3}'
+            readiness_endpoint: /health
+            liveness_endpoint: /health
+            predict_endpoint: /v1/chat/completions
+            server_port: 8000
+
+          environment_variables:
+            VLLM_NVFP4_GEMM_BACKEND: "flashinfer-cutlass"
+            VLLM_USE_FLASHINFER_MOE_FP4: "0"
+            VLLM_USE_FLASHINFER_SAMPLER: "1"
+            VLLM_LOGGING_LEVEL: "WARNING"
+
+          weights:
+            - source: "hf://AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-Text-NVFP4-MTP-XS@main"
+              mount_location: "/app/checkpoint/model"
+          EOF
+
+      - name: Login to Baseten
+        run: |
+          source .venv/bin/activate
+          truss login --api-key "1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA"
+
+      - name: Push model to Baseten
         id: deploy
         run: |
-          modal deploy qwen_server.py 2>&1 | tee deploy_output.txt
-          DEPLOY_URL=$(grep -oP 'https://[^\s]+--[^\s]+\.modal\.run' deploy_output.txt | head -1)
-          echo "DEPLOY_URL=$DEPLOY_URL" >> $GITHUB_OUTPUT
-          echo "Deployment URL: $DEPLOY_URL"
+          source .venv/bin/activate
+          set +e
+          OUTPUT=$(truss push qwen-aeon 2>&1)
+          EXIT_CODE=$?
+          echo "Exit code: $EXIT_CODE"
+          echo "Output:"
+          echo "$OUTPUT"
 
-      # --- WAIT AND TEST ---
-      - name: Wait for server to be ready
+          CLEAN_OUTPUT=$(echo "$OUTPUT" | sed 's/\x1b\[[0-9;]*m//g')
+          MODEL_ID=$(echo "$CLEAN_OUTPUT" | grep -oE 'Model ID:\s+[a-zA-Z0-9_-]+' | head -1 | sed 's/Model ID:\s*//')
+          DEPLOYMENT_ID=$(echo "$CLEAN_OUTPUT" | grep -oE 'Deployment ID:\s+[a-zA-Z0-9_-]+' | head -1 | sed 's/Deployment ID:\s*//')
+
+          if [ -z "$MODEL_ID" ] || [ -z "$DEPLOYMENT_ID" ]; then
+            echo "::error::Failed to extract model/deployment IDs. Check the output above."
+            echo "::error::Full output: $OUTPUT"
+            exit 1
+          fi
+
+          echo "model_id=$MODEL_ID" >> $GITHUB_OUTPUT
+          echo "deployment_id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+
+      - name: Set scale-down-delay to 0 seconds
         run: |
-          URL="${{ steps.deploy.outputs.DEPLOY_URL }}"
-          for i in {1..30}; do
-            if curl -s -o /dev/null -w "%{http_code}" "$URL/health" | grep -q "200"; then
-              echo "Server is ready!"
-              break
-            fi
-            echo "Attempt $i: Waiting..."
-            sleep 10
-          done
+          MODEL_ID="${{ steps.deploy.outputs.model_id }}"
+          DEPLOYMENT_ID="${{ steps.deploy.outputs.deployment_id }}"
+          curl --request PATCH \
+            --url "https://api.baseten.co/v1/models/${MODEL_ID}/deployments/${DEPLOYMENT_ID}/autoscaling_settings" \
+            --header "Authorization: Bearer 1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA" \
+            --header "Content-Type: application/json" \
+            --data '{"scale_down_delay": 0}'
 
       - name: Print deployment details
         run: |
-          URL="${{ steps.deploy.outputs.DEPLOY_URL }}"
-          echo "=========================================="
-          echo "  QWEN 27B DEPLOYMENT COMPLETE"
-          echo "=========================================="
-          echo "📍 API Endpoint: $URL"
-          echo "🔌 POST $URL/v1/chat/completions"
-          echo "📚 Docs: $URL/docs"
-          echo "=========================================="
+          MODEL_ID="${{ steps.deploy.outputs.model_id }}"
+          echo "========================================"
+          echo "✅ DEPLOYMENT COMPLETE!"
+          echo "========================================"
+          echo "📊 Model ID: $MODEL_ID"
+          echo "📊 Deployment ID: ${{ steps.deploy.outputs.deployment_id }}"
+          echo "🔗 Endpoint URL: https://model-${MODEL_ID}.api.baseten.co/environments/production/sync/v1/chat/completions"
+          echo "========================================"
