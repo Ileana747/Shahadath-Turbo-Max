@@ -46,8 +46,10 @@ jobs:
             accelerator: L4
             use_gpu: true
 
-          docker_server:
+          base_image:
             image: ghcr.io/aeon-7/aeon-vllm-ultimate:latest
+
+          docker_server:
             start_command: >-
               vllm serve /app/checkpoint/model
               --served-model-name Qwen/Qwen3.6-27B
