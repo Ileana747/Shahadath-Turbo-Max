@@ -55,6 +55,7 @@ jobs:
               max_seq_len: 131072
               quantization_type: no_quant
               tensor_parallel_count: 1
+              num_builder_gpus: 1
               plugin_configuration:
                 paged_kv_cache: true
                 use_paged_context_fmha: true
@@ -65,17 +66,50 @@ jobs:
               served_model_name: "Qwen/Qwen3.6-27B"
           EOF
 
+      - name: Patch tokenizer_config.json
+        run: |
+          source .venv/bin/activate
+          # Download the tokenizer config from the AEON repo
+          curl -L -o qwen-aeon/tokenizer_config.json \
+            "https://huggingface.co/AEON-7/Qwen3.6-27B-AEON-Ultimate-Uncensored-Text-NVFP4-MTP-XS/raw/main/tokenizer_config.json"
+          
+          # Patch the tokenizer class from TokenizersBackend to Qwen2Tokenizer [citation:1][citation:9]
+          sed -i 's/"tokenizer_class": "TokenizersBackend"/"tokenizer_class": "Qwen2Tokenizer"/g' qwen-aeon/tokenizer_config.json
+          
+          echo "✅ Tokenizer patched successfully"
+
       - name: Login to Baseten
         run: |
           source .venv/bin/activate
           truss login --api-key "1X4X9ApI.mz1ddZdb36q936uEfARXnc01lbgYbIqA"
+
+      - name: Check for existing deployment
+        id: check
+        run: |
+          source .venv/bin/activate
+          set +e
+          LIST=$(truss model-list 2>/dev/null)
+          if echo "$LIST" | grep -q "qwen-aeon-single-l4"; then
+            echo "Model already exists, will update instead of creating new"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Push model to Baseten
         id: deploy
         run: |
           source .venv/bin/activate
           set +e
-          OUTPUT=$(truss push qwen-aeon 2>&1)
+          
+          if [ "${{ steps.check.outputs.exists }}" = "true" ]; then
+            echo "Updating existing model..."
+            OUTPUT=$(truss push qwen-aeon --update 2>&1)
+          else
+            echo "Creating new model..."
+            OUTPUT=$(truss push qwen-aeon 2>&1)
+          fi
+          
           EXIT_CODE=$?
           echo "Exit code: $EXIT_CODE"
           echo "Output:"
